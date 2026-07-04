@@ -1,0 +1,9 @@
+apps/
+  mobile/
+  web/
+  desktop/
+
+backend/
+core/
+docs/
+.github/
