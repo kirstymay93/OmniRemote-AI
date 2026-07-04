@@ -1,9 +1,45 @@
-apps/
-  mobile/
-  web/
-  desktop/
+import 'package:flutter/material.dart';
 
-backend/
-core/
-docs/
-.github/
+void main() {
+  runApp(const OmniRemoteApp());
+}
+
+class OmniRemoteApp extends StatelessWidget {
+  const OmniRemoteApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'OmniRemote AI',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        useMaterial3: true,
+      ),
+      home: const HomeScreen(),
+    );
+  }
+}
+
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('OmniRemote AI'),
+      ),
+      body: const Center(
+        child: Text(
+          'No devices yet.\nTap + to add your first device.',
+          textAlign: TextAlign.center,
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {},
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
