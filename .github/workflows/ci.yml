@@ -22,13 +22,22 @@ jobs:
         run: npm ci
 
       - name: Lint
-        run: npm run lint || echo "No lint script found"
+        run: npm run lint || echo "No lint script"
 
       - name: Test
-        run: npm test || echo "No tests defined"
+        run: npm test || echo "No tests found"
 
       - name: Build
-        run: npm run build || echo "No build step defined"
+        run: npm run build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-build
+          path: |
+            dist
+            build
+            out
 
   deploy:
     needs: ci
@@ -42,7 +51,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Authenticate to GCP (WIF)
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app-build
+
+      - name: Authenticate to Google Cloud (WIF)
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
