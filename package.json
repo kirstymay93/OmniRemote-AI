@@ -1,3 +1,8 @@
+"scripts": {
+  "start": "node index.js",
+  "test": "echo \"No tests yet\"",
+  "build": "echo \"No build required (Express app)\""
+}
 {
   "name": "omniremote-ai",
   "version": "1.0.0",
