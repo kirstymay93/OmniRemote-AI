@@ -1,0 +1,25 @@
+{
+  "name": "omniremote-ai",
+  "version": "1.0.0",
+  "description": "Universal remote AI system",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"No tests yet\"",
+    "build": "echo \"No build step yet\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kirstymay93/OmniRemote-AI.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/kirstymay93/OmniRemote-AI/issues"
+  },
+  "homepage": "https://github.com/kirstymay93/OmniRemote-AI#readme",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}
