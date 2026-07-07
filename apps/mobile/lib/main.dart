@@ -13,7 +13,9 @@ class OmniRemoteApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'OmniRemote AI',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.blue,
+        ),
         useMaterial3: true,
       ),
       home: const HomeScreen(),
@@ -24,8 +26,13 @@ class OmniRemoteApp extends StatelessWidget {
 class Device {
   final String name;
   final String type;
+  final bool connected;
 
-  Device(this.name, this.type);
+  Device({
+    required this.name,
+    required this.type,
+    this.connected = false,
+  });
 }
 
 class HomeScreen extends StatefulWidget {
@@ -36,11 +43,17 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  List<Device> devices = [];
+  final List<Device> devices = [];
 
   void addDevice() {
     setState(() {
-      devices.add(Device("Living Room TV", "TV"));
+      devices.add(
+        Device(
+          name: "Living Room TV",
+          type: "Smart TV",
+          connected: true,
+        ),
+      );
     });
   }
 
@@ -56,11 +69,13 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("OmniRemote AI")),
+      appBar: AppBar(
+        title: const Text("OmniRemote AI"),
+      ),
       body: devices.isEmpty
           ? const Center(
               child: Text(
-                "No devices yet.\nTap + to add one.",
+                "No devices connected.\nTap + to add a device.",
                 textAlign: TextAlign.center,
               ),
             )
@@ -68,10 +83,20 @@ class _HomeScreenState extends State<HomeScreen> {
               itemCount: devices.length,
               itemBuilder: (context, index) {
                 final device = devices[index];
+
                 return ListTile(
-                  leading: const Icon(Icons.tv),
+                  leading: Icon(
+                    device.connected
+                        ? Icons.tv
+                        : Icons.tv_off,
+                  ),
                   title: Text(device.name),
                   subtitle: Text(device.type),
+                  trailing: Icon(
+                    device.connected
+                        ? Icons.check_circle
+                        : Icons.error,
+                  ),
                   onTap: () => openRemote(device),
                 );
               },
@@ -87,43 +112,55 @@ class _HomeScreenState extends State<HomeScreen> {
 class RemoteScreen extends StatelessWidget {
   final Device device;
 
-  const RemoteScreen({super.key, required this.device});
+  const RemoteScreen({
+    super.key,
+    required this.device,
+  });
 
-  void press(String button) {
-    debugPrint(button);
+  void sendCommand(String command) {
+    debugPrint(
+      "Sending command: $command to ${device.name}",
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(device.name)),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          ElevatedButton(
-            onPressed: () => press("Power"),
-            child: const Text("Power"),
-          ),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              ElevatedButton(
-                onPressed: () => press("Vol -"),
-                child: const Text("-"),
-              ),
-              ElevatedButton(
-                onPressed: () => press("Vol +"),
-                child: const Text("+"),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: () => press("Home"),
-            child: const Text("Home"),
-          ),
-        ],
+      appBar: AppBar(
+        title: Text(device.name),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: () => sendCommand("POWER"),
+              child: const Text("Power"),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment:
+                  MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                  onPressed: () =>
+                      sendCommand("VOLUME_DOWN"),
+                  child: const Text("-"),
+                ),
+                ElevatedButton(
+                  onPressed: () =>
+                      sendCommand("VOLUME_UP"),
+                  child: const Text("+"),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () => sendCommand("HOME"),
+              child: const Text("Home"),
+            ),
+          ],
+        ),
       ),
     );
   }
