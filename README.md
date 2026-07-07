@@ -1,103 +1,55 @@
-# OmniRemote AI
-
-🚀 **Universal AI-powered remote control platform**
-
-OmniRemote AI is a next-generation smart remote control system built to connect, manage, and control devices through intelligent automation and AI technology.
-
+# 🚀 OmniRemote AI
+Universal AI-powered remote control platform.
 ## Features
-
-✅ Express.js backend API  
-✅ Cloud-ready architecture  
-✅ Google Cloud Run deployment support  
-✅ GitHub Actions CI/CD pipeline  
-✅ Health monitoring endpoint  
-✅ Future AI device discovery framework  
-
-## Technology Stack
-
-- Node.js
-- Express.js
-- GitHub Actions
-- Google Cloud Run
-- Google Cloud IAM
-
-## Project Structure
-
-OmniRemote-AI/
-│
-├── index.js
-├── package.json
-├── package-lock.json
-├── README.md
-└── .github/
-└── workflows/
-└── ci.yml
-
-## Installation
-
-Clone the repository:
-
+- Node.js Express backend
+- AI remote control foundation
+- Cloud deployment ready
+- GitHub Actions CI/CD
+- Google Cloud Run support
+- Health monitoring API
+## Install
 ```bash
 git clone https://github.com/kirstymay93/OmniRemote-AI.git
-
-http://localhost:8080
-
-Open the project:
 cd OmniRemote-AI
-
-Install dependencies:
 npm install
 
-Run Application
+Run
 
-Start OmniRemote AI:
 npm start
+
+Server:
+
+http://localhost:8080
 
 API
 
 Status
+
 GET /
 
-Response:
+Health
 
-{
-  "message": "OmniRemote AI running"
-}Health Check
 GET /health
 
-{
-  "status": "healthy",
-  "service": "OmniRemote AI"
-}Deployment
+Technology
 
-OmniRemote AI uses automated deployment:
-
+* Node.js
+* Express.js
 * GitHub Actions
 * Google Cloud Run
 
-Every update pushed to the main branch can trigger the deployment pipeline.
+Deployment
 
-Environment
-
-Create a local .env file:
-NODE_ENV=production
-PORT=8080
-
-Never upload private keys or secret credentials.
+Push to the main branch to trigger CI/CD.
 
 Roadmap
 
-🔹 AI device recognition
-🔹 Smart home integrations
-🔹 Voice control
-🔹 Mobile applications
-🔹 Universal remote learning
-🔹 Intelligent automation engine
+* AI device discovery
+* Smart home control
+* Voice commands
+* Mobile app
+* Universal remote learning
 
 License
 
 MIT License
-
-⸻
-
-Built with Node.js, Cloud technology, and AI innovation.
