@@ -2,59 +2,66 @@ name: OmniRemote AI CI/CD
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+
+permissions:
+  contents: read
+  id-token: write
 
 jobs:
-  ci:
+
+  test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      - name: Lint (optional safe)
-        run: npm run lint || echo "No lint script"
+      - name: Lint
+        run: npm run lint || true
 
-      - name: Test (optional safe)
-        run: npm test || echo "No tests yet"
+      - name: Test
+        run: npm test || true
 
-      - name: Verify app starts
-        run: timeout 5s node index.js || true
+      - name: Build
+        run: npm run build
+
 
   deploy:
-    needs: ci
+    needs: test
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: read
-      id-token: write
-
     steps:
-      - name: Checkout
+
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Authenticate to Google Cloud (WIF)
+
+      - name: Authenticate Google Cloud
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
           service_account: ${{ secrets.GCP_SA }}
 
-      - name: Setup gcloud
+
+      - name: Setup Google Cloud
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Deploy to Cloud Run
+
+      - name: Deploy Cloud Run
         run: |
           gcloud run deploy omniremote-ai \
-            --source . \
-            --region australia-southeast1 \
-            --platform managed \
-            --allow-unauthenticated \
-            --quiet
+          --source . \
+          --region australia-southeast1 \
+          --platform managed \
+          --allow-unauthenticated
