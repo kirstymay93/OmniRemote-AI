@@ -1,21 +1,19 @@
 const express = require("express");
 const router = express.Router();
+
 const { processCommand } = require("../services/commandService");
+const { executeAction } = require("../services/deviceService");
 
 router.post("/chat", (req, res) => {
   const { message } = req.body;
 
-  if (!message) {
-    return res.status(400).json({
-      error: "Message required"
-    });
-  }
-
   const command = processCommand(message);
+  const result = executeAction(command.action);
 
   res.json({
-    reply: command.message,
-    action: command.action
+    message,
+    action: command.action,
+    response: result
   });
 });
 
