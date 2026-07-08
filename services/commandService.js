@@ -1,24 +1,47 @@
+const fs = require("fs");
+
+function saveDevice(name, type) {
+  const file = "devices.json";
+
+  let data = { devices: [] };
+
+  if (fs.existsSync(file)) {
+    data = JSON.parse(fs.readFileSync(file));
+  }
+
+  data.devices.push({
+    name,
+    type,
+    added: new Date().toISOString()
+  });
+
+  fs.writeFileSync(file, JSON.stringify(data, null, 2));
+}
+
 function processCommand(command) {
   const text = command.toLowerCase();
+
+  if (text.startsWith("add ")) {
+    const device = text.replace("add ", "");
+
+    let type = "device";
+
+    if (device.includes("light")) type = "light";
+    if (device.includes("tv")) type = "tv";
+    if (device.includes("music")) type = "music";
+
+    saveDevice(device, type);
+
+    return {
+      action: "DEVICE_ADDED",
+      message: `${device} saved`
+    };
+  }
 
   if (text.includes("light") && text.includes("on")) {
     return {
       action: "LIGHTS_ON",
       message: "Lights turned on"
-    };
-  }
-
-  if (text.includes("light") && text.includes("off")) {
-    return {
-      action: "LIGHTS_OFF",
-      message: "Lights turned off"
-    };
-  }
-
-  if (text.includes("tv") && text.includes("on")) {
-    return {
-      action: "TV_ON",
-      message: "TV turned on"
     };
   }
 
@@ -29,44 +52,16 @@ function processCommand(command) {
     };
   }
 
-  if (text.includes("music") || text.includes("play")) {
+  if (text.includes("music")) {
     return {
       action: "MUSIC_PLAY",
       message: "Playing music"
     };
   }
 
-  if (text.includes("restart")) {
-    return {
-      action: "RESTART",
-      message: "Restart command detected"
-    };
-  }
-
-  if (text.includes("hello") || text.includes("hi")) {
-    return {
-      action: "CHAT",
-      message: "Hello, I am OmniRemote AI"
-    };
-  }
-
-  if (text.includes("status")) {
-    return {
-      action: "STATUS",
-      message: "All systems online"
-    };
-  }
-
-  if (text.includes("time")) {
-    return {
-      action: "TIME",
-      message: new Date().toISOString()
-    };
-  }
-
   return {
     action: "UNKNOWN",
-    message: "I don't understand that command yet"
+    message: "Command not recognised"
   };
 }
 
