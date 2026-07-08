@@ -3,6 +3,12 @@ const { processCommand } = require("../services/commandService");
 
 const router = express.Router();
 
+router.get("/", (req, res) => {
+  res.json({
+    status: "Command system online"
+  });
+});
+
 router.post("/", (req, res) => {
   const { command } = req.body;
 
