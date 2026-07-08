@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>OmniRemote AI</title>
+</head>
+
+<body>
+<h1>🤖 OmniRemote AI</h1>
+
+<input id="command" placeholder="Type command">
+<button onclick="send()">Send</button>
+
+<p id="reply"></p>
+
+<script>
+async function send() {
+  const message = document.getElementById("command").value;
+
+  const response = await fetch("/ai/chat", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      message: message
+    })
+  });
+
+  const data = await response.json();
+
+  document.getElementById("reply").innerText =
+    JSON.stringify(data);
+}
+</script>
+
+</body>
+</html>
