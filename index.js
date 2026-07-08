@@ -1,63 +1,46 @@
 const express = require("express");
+const fs = require("fs");
 
 const app = express();
 
 app.use(express.json());
-app.use(express.static("public"));
+
+const memoryFile = "./memory.json";
+
+function loadMemory() {
+  if (!fs.existsSync(memoryFile)) {
+    return { users: [], commands: [] };
+  }
+
+  return JSON.parse(fs.readFileSync(memoryFile, "utf8"));
+}
+
+function saveCommand(command) {
+  const memory = loadMemory();
+
+  memory.commands.push({
+    command,
+    time: new Date().toISOString()
+  });
+
+  fs.writeFileSync(memoryFile, JSON.stringify(memory, null, 2));
+}
 
 app.get("/", (req, res) => {
-  res.send(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>OmniRemote AI</title>
-      <style>
-        body {
-          font-family: Arial;
-          text-align: center;
-          padding: 40px;
-        }
-        input, button {
-          padding: 10px;
-          font-size: 16px;
-        }
-      </style>
-    </head>
+  res.send("OmniRemote AI running");
+});
 
-    <body>
-      <h1>🤖 OmniRemote AI</h1>
-
-      <input id="message" placeholder="Type command">
-      <button onclick="send()">Send</button>
-
-      <h3 id="reply"></h3>
-
-      <script>
-        async function send() {
-          const message =
-            document.getElementById("message").value;
-
-          const response = await fetch("/ai/chat", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ message })
-          });
-
-          const data = await response.json();
-
-          document.getElementById("reply").innerText =
-            JSON.stringify(data);
-        }
-      </script>
-    </body>
-    </html>
-  `);
+app.get("/health", (req, res) => {
+  res.json({
+    status: "healthy",
+    service: "OmniRemote AI"
+  });
 });
 
 app.post("/ai/chat", (req, res) => {
   const message = req.body.message || "";
+
+  saveCommand(message);
 
   const text = message.toLowerCase();
 
@@ -81,11 +64,8 @@ app.post("/ai/chat", (req, res) => {
   });
 });
 
-app.get("/health", (req, res) => {
-  res.json({
-    status: "healthy",
-    service: "OmniRemote AI"
-  });
+app.get("/memory", (req, res) => {
+  res.json(loadMemory());
 });
 
 const PORT = process.env.PORT || 10000;
