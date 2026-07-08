@@ -6,10 +6,12 @@
       "type": "node",
       "request": "launch",
       "program": "${workspaceFolder}/index.js",
+      "cwd": "${workspaceFolder}",
       "skipFiles": [
         "<node_internals>/**"
       ],
-      "console": "integratedTerminal"
+      "console": "integratedTerminal",
+      "restart": true
     }
   ]
 }
