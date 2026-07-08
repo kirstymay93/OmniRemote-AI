@@ -8,7 +8,7 @@ const memoryFile = "./memory.json";
 const deviceFile = "./devices.json";
 
 const WEBHOOK_URL =
-"https://webhook.site/6b046ec1-f63b-4973-beba-5211c7dd3198";
+"https://webhook.site/080146d1-5545-49cf-9347-4a42378f9774";
 
 
 function load(file, empty) {
@@ -86,7 +86,6 @@ async function sendAction(device,action){
     time:new Date().toISOString()
   };
 
-
   try{
 
     await fetch(WEBHOOK_URL,{
@@ -97,12 +96,10 @@ async function sendAction(device,action){
       body:JSON.stringify(payload)
     });
 
-
     return {
       sent:true,
       payload
     };
-
 
   }catch(error){
 
@@ -112,7 +109,6 @@ async function sendAction(device,action){
     };
 
   }
-
 }
 
 
@@ -120,7 +116,6 @@ async function sendAction(device,action){
 app.get("/",(req,res)=>{
 
 res.send(`
-
 <h1>🤖 OmniRemote AI</h1>
 
 <input id="cmd" placeholder="Command">
@@ -131,34 +126,24 @@ res.send(`
 
 <pre id="out"></pre>
 
-
 <script>
 
 async function send(){
 
-let message=
-document.getElementById("cmd").value;
-
+let message=document.getElementById("cmd").value;
 
 let r=await fetch("/ai/chat",{
-
 method:"POST",
-
 headers:{
 "Content-Type":"application/json"
 },
-
 body:JSON.stringify({message})
-
 });
-
 
 let data=await r.json();
 
-
-document.getElementById("out").textContent=
+document.getElementById("out").textContent =
 JSON.stringify(data,null,2);
-
 
 speechSynthesis.speak(
 new SpeechSynthesisUtterance(data.reply)
@@ -173,27 +158,24 @@ let SpeechRecognition =
 window.SpeechRecognition ||
 window.webkitSpeechRecognition;
 
-
 let r=new SpeechRecognition();
 
+r.lang="en-US";
 
 r.onresult=function(e){
 
-document.getElementById("cmd").value=
+document.getElementById("cmd").value =
 e.results[0][0].transcript;
-
 
 send();
 
 };
-
 
 r.start();
 
 }
 
 </script>
-
 `);
 
 });
@@ -213,11 +195,9 @@ service:"OmniRemote AI"
 
 app.post("/ai/chat",async(req,res)=>{
 
-
 const message=req.body.message || "";
 
 const text=message.toLowerCase();
-
 
 remember(message);
 
@@ -229,10 +209,8 @@ const name=text.replace("add ","");
 
 let type="device";
 
-
 if(name.includes("light"))
 type="light";
-
 
 if(name.includes("tv"))
 type="tv";
@@ -255,12 +233,12 @@ reply:`${name} saved`
 
 
 
-const data=load(deviceFile,{
+const devices=load(deviceFile,{
 devices:[]
 });
 
 
-const device=data.devices.find(d=>
+const device=devices.devices.find(d =>
 text.includes(d.name)
 );
 
@@ -272,12 +250,11 @@ if(device && text.includes("turn on")){
 updateDevice(device.name,"ON");
 
 
-const webhook=
+const webhook =
 await sendAction(
 device.name,
 "ON"
 );
-
 
 
 return res.json({
@@ -294,7 +271,6 @@ reply:`Turning on ${device.name}`
 
 });
 
-
 }
 
 
@@ -305,12 +281,11 @@ if(device && text.includes("turn off")){
 updateDevice(device.name,"OFF");
 
 
-const webhook=
+const webhook =
 await sendAction(
 device.name,
 "OFF"
 );
-
 
 
 return res.json({
@@ -326,7 +301,6 @@ webhook,
 reply:`Turning off ${device.name}`
 
 });
-
 
 }
 
@@ -362,7 +336,6 @@ commands:[]
 }));
 
 });
-
 
 
 const PORT=process.env.PORT || 10000;
