@@ -2,38 +2,35 @@ const express = require("express");
 const fs = require("fs");
 
 const app = express();
-
 app.use(express.json());
 
 const memoryFile = "./memory.json";
 const deviceFile = "./devices.json";
 
-function loadFile(file, empty) {
+function load(file, empty) {
   if (!fs.existsSync(file)) {
     fs.writeFileSync(file, JSON.stringify(empty, null, 2));
   }
-
   return JSON.parse(fs.readFileSync(file, "utf8"));
 }
 
+function save(file, data) {
+  fs.writeFileSync(file, JSON.stringify(data, null, 2));
+}
+
 function saveCommand(command) {
-  const memory = loadFile(memoryFile, {
-    users: [],
-    commands: []
-  });
+  const memory = load(memoryFile, { users: [], commands: [] });
 
   memory.commands.push({
     command,
     time: new Date().toISOString()
   });
 
-  fs.writeFileSync(memoryFile, JSON.stringify(memory, null, 2));
+  save(memoryFile, memory);
 }
 
 function saveDevice(name, type) {
-  const devices = loadFile(deviceFile, {
-    devices: []
-  });
+  const devices = load(deviceFile, { devices: [] });
 
   devices.devices.push({
     name,
@@ -41,114 +38,108 @@ function saveDevice(name, type) {
     added: new Date().toISOString()
   });
 
-  fs.writeFileSync(deviceFile, JSON.stringify(devices, null, 2));
+  save(deviceFile, devices);
 }
 
 app.get("/", (req, res) => {
-  res.send("OmniRemote AI running");
+  res.send(`
+    <h1>🤖 OmniRemote AI</h1>
+    <input id="cmd" placeholder="Type command">
+    <button onclick="send()">Send</button>
+    <pre id="result"></pre>
+
+    <script>
+      async function send() {
+        const message = document.getElementById("cmd").value;
+
+        const response = await fetch("/ai/chat", {
+          method:"POST",
+          headers:{
+            "Content-Type":"application/json"
+          },
+          body:JSON.stringify({message})
+        });
+
+        document.getElementById("result").textContent =
+          JSON.stringify(await response.json(), null, 2);
+      }
+    </script>
+  `);
 });
 
-app.get("/health", (req, res) => {
+app.get("/health", (req,res)=>{
   res.json({
-    status: "healthy",
-    service: "OmniRemote AI"
+    status:"healthy",
+    service:"OmniRemote AI"
   });
 });
 
-app.post("/ai/chat", (req, res) => {
+app.post("/ai/chat",(req,res)=>{
   const message = req.body.message || "";
   const text = message.toLowerCase();
 
   saveCommand(message);
 
-  // Add device memory
-  if (text.startsWith("add ")) {
-    const device = text.replace("add ", "");
+  if(text.startsWith("add ")){
+    const device = text.replace("add ","");
 
-    let type = "device";
+    let type="device";
+    if(device.includes("light")) type="light";
+    if(device.includes("tv")) type="tv";
+    if(device.includes("music")) type="music";
 
-    if (device.includes("light")) type = "light";
-    if (device.includes("tv")) type = "tv";
-    if (device.includes("music")) type = "music";
-
-    saveDevice(device, type);
+    saveDevice(device,type);
 
     return res.json({
-      action: "DEVICE_ADDED",
-      reply: `${device} saved`
+      action:"DEVICE_ADDED",
+      reply:`${device} saved`
     });
   }
 
-  if (text.includes("light") && text.includes("on")) {
+  if(text.includes("light") && text.includes("on")){
     return res.json({
-      action: "LIGHTS_ON",
-      reply: "Lights turned on"
+      action:"LIGHTS_ON",
+      reply:"Lights turned on"
     });
   }
 
-  if (text.includes("light") && text.includes("off")) {
+  if(text.includes("light") && text.includes("off")){
     return res.json({
-      action: "LIGHTS_OFF",
-      reply: "Lights turned off"
+      action:"LIGHTS_OFF",
+      reply:"Lights turned off"
     });
   }
 
-  if (text.includes("tv") && text.includes("on")) {
+  if(text.includes("tv")){
     return res.json({
-      action: "TV_ON",
-      reply: "TV turned on"
+      action:"TV_CONTROL",
+      reply:"TV command detected"
     });
   }
 
-  if (text.includes("tv") && text.includes("off")) {
+  if(text.includes("music")){
     return res.json({
-      action: "TV_OFF",
-      reply: "TV turned off"
+      action:"MUSIC",
+      reply:"Music command detected"
     });
   }
 
-  if (text.includes("music")) {
-    return res.json({
-      action: "MUSIC_PLAY",
-      reply: "Playing music"
-    });
-  }
-
-  if (text.includes("hello") || text.includes("hi")) {
-    return res.json({
-      action: "CHAT",
-      reply: "Hello, I am OmniRemote AI"
-    });
-  }
-
-  if (text.includes("status")) {
-    return res.json({
-      action: "STATUS",
-      reply: "All systems online"
-    });
-  }
-
-  res.json({
-    action: "UNKNOWN",
-    reply: `OmniRemote AI received: ${message}`
+  return res.json({
+    action:"CHAT",
+    reply:`OmniRemote AI received: ${message}`
   });
 });
 
-app.get("/memory", (req, res) => {
-  res.json(loadFile(memoryFile, {
-    users: [],
-    commands: []
-  }));
+app.get("/memory",(req,res)=>{
+  res.json(load(memoryFile,{users:[],commands:[]}));
 });
 
-app.get("/devices", (req, res) => {
-  res.json(loadFile(deviceFile, {
-    devices: []
-  }));
+app.get("/devices",(req,res)=>{
+  res.json(load(deviceFile,{devices:[]}));
 });
 
 const PORT = process.env.PORT || 10000;
 
-app.listen(PORT, "0.0.0.0", () => {
+app.listen(PORT,"0.0.0.0",()=>{
   console.log(`OmniRemote AI running on port ${PORT}`);
 });
