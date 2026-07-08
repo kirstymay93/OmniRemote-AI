@@ -33,33 +33,44 @@ function remember(command) {
 }
 
 function addDevice(name, type) {
-  const devices = load(deviceFile, {
+  const data = load(deviceFile, {
     devices: []
   });
 
-  if (!devices.devices.find(d => d.name === name)) {
-    devices.devices.push({
+  if (!data.devices.find(d => d.name === name)) {
+    data.devices.push({
       name,
       type,
+      status: "OFF",
       added: new Date().toISOString()
     });
   }
 
-  save(deviceFile, devices);
+  save(deviceFile, data);
 }
+
+function updateDevice(name, status) {
+  const data = load(deviceFile, {
+    devices: []
+  });
+
+  const device = data.devices.find(d => d.name === name);
+
+  if (device) {
+    device.status = status;
+  }
+
+  save(deviceFile, data);
+}
+
 
 app.get("/", (req,res)=>{
 res.send(`
-<!DOCTYPE html>
-<html>
-<body>
-
 <h1>🤖 OmniRemote AI</h1>
 
-<input id="cmd" placeholder="Speak or type command">
-
+<input id="cmd" placeholder="Command">
 <button onclick="send()">Send</button>
-<button onclick="listen()">🎤 Voice</button>
+<button onclick="voice()">🎤 Voice</button>
 
 <pre id="out"></pre>
 
@@ -88,32 +99,26 @@ new SpeechSynthesisUtterance(data.reply)
 
 }
 
-
-function listen(){
+function voice(){
 
 let SpeechRecognition =
 window.SpeechRecognition ||
 window.webkitSpeechRecognition;
 
-let recognition=new SpeechRecognition();
+let r=new SpeechRecognition();
 
-recognition.onresult=function(event){
-
+r.onresult=function(e){
 document.getElementById("cmd").value =
-event.results[0][0].transcript;
+e.results[0][0].transcript;
 
 send();
-
 };
 
-recognition.start();
+r.start();
 
 }
 
 </script>
-
-</body>
-</html>
 `);
 });
 
@@ -134,7 +139,7 @@ const text=message.toLowerCase();
 remember(message);
 
 
-// Add device
+// ADD DEVICE
 
 if(text.startsWith("add ")){
 
@@ -144,7 +149,6 @@ let type="device";
 
 if(name.includes("light")) type="light";
 if(name.includes("tv")) type="tv";
-if(name.includes("speaker")) type="speaker";
 
 addDevice(name,type);
 
@@ -157,7 +161,7 @@ reply:`${name} saved`
 }
 
 
-// Find device
+// FIND DEVICE
 
 const devices=load(deviceFile,{
 devices:[]
@@ -168,45 +172,45 @@ text.includes(d.name)
 );
 
 
-// Control saved device
+// DEVICE ON ACTION
 
 if(device && text.includes("turn on")){
+
+updateDevice(device.name,"ON");
 
 return res.json({
 action:"DEVICE_ON",
 device:device.name,
+status:"ON",
 reply:`Turning on ${device.name}`
 });
 
 }
 
 
+// DEVICE OFF ACTION
+
 if(device && text.includes("turn off")){
+
+updateDevice(device.name,"OFF");
 
 return res.json({
 action:"DEVICE_OFF",
 device:device.name,
+status:"OFF",
 reply:`Turning off ${device.name}`
 });
 
 }
 
 
-if(text.includes("hello") || text.includes("hi")){
+// STATUS
+
+if(text.includes("status")){
 
 return res.json({
-action:"CHAT",
-reply:"Hello, I am OmniRemote AI"
-});
-
-}
-
-
-if(text.includes("time")){
-
-return res.json({
-action:"TIME",
-reply:new Date().toLocaleString()
+action:"SYSTEM_STATUS",
+reply:"OmniRemote AI is online"
 });
 
 }
@@ -217,7 +221,13 @@ action:"CHAT",
 reply:`I heard: ${message}`
 });
 
+});
 
+
+app.get("/devices",(req,res)=>{
+res.json(load(deviceFile,{
+devices:[]
+}));
 });
 
 
@@ -225,13 +235,6 @@ app.get("/memory",(req,res)=>{
 res.json(load(memoryFile,{
 users:[],
 commands:[]
-}));
-});
-
-
-app.get("/devices",(req,res)=>{
-res.json(load(deviceFile,{
-devices:[]
 }));
 });
 
