@@ -1,4 +1,4 @@
-name: OmniRemote AI CI/CD
+name: OmniRemote AI CI
 
 on:
   push:
@@ -7,7 +7,6 @@ on:
 
 permissions:
   contents: read
-  id-token: write
 
 defaults:
   run:
@@ -21,11 +20,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Show structure
-        run: |
-          ls -la
-          find . -name package.json -print
-
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -34,36 +28,8 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Check scripts
+      - name: Check app
         run: npm run
 
-      - name: Build
-        run: npm run build || echo "No build required"
-
-      - name: Test
+      - name: Test app
         run: npm test || echo "No tests configured"
-
-  deploy:
-    needs: test
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Authenticate Google Cloud
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
-          service_account: ${{ secrets.GCP_SA }}
-
-      - name: Setup Google Cloud
-        uses: google-github-actions/setup-gcloud@v2
-
-      - name: Deploy Cloud Run
-        run: |
-          gcloud run deploy omniremote-ai \
-            --source . \
-            --region australia-southeast1 \
-            --platform managed \
-            --allow-unauthenticated
