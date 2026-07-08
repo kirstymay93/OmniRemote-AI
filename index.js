@@ -4,6 +4,9 @@ const app = express();
 
 app.use(express.json());
 
+const aiRoutes = require("./routes/ai");
+
+app.use("/ai", aiRoutes);
 app.get("/", (req, res) => {
   res.send("OmniRemote AI running");
 });
