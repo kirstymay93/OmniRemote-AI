@@ -2,19 +2,19 @@ const express = require("express");
 const router = express.Router();
 
 const { processCommand } = require("../services/commandService");
-const { executeAction } = require("../services/deviceService");
+const { controlDevice } = require("../services/deviceController");
 
 router.post("/chat", (req, res) => {
-  const { message } = req.body;
+  const { message, device = "default device" } = req.body;
 
   const command = processCommand(message);
-  const result = executeAction(command.action);
 
-  res.json({
-    message,
-    action: command.action,
-    response: result
-  });
+  const result = controlDevice(
+    command.action,
+    device
+  );
+
+  res.json(result);
 });
 
 module.exports = router;
