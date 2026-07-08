@@ -22,9 +22,30 @@ function processCommand(command) {
     };
   }
 
+  if (text.includes("hello") || text.includes("hi")) {
+    return {
+      action: "CHAT",
+      message: "Hello, I am OmniRemote AI"
+    };
+  }
+
+  if (text.includes("status")) {
+    return {
+      action: "STATUS",
+      message: "All systems online"
+    };
+  }
+
+  if (text.includes("time")) {
+    return {
+      action: "TIME",
+      message: new Date().toISOString()
+    };
+  }
+
   return {
     action: "UNKNOWN",
-    message: "Command not recognised"
+    message: "I don't understand that command yet"
   };
 }
 
