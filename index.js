@@ -4,9 +4,12 @@ const app = express();
 
 app.use(express.json());
 
-const aiRoutes = require("./routes/ai");
+const commandRoutes = require("./routes/commands");
+app.use("/commands", commandRoutes);
 
+const aiRoutes = require("./routes/ai");
 app.use("/ai", aiRoutes);
+
 app.get("/", (req, res) => {
   res.send("OmniRemote AI running");
 });
@@ -15,15 +18,6 @@ app.get("/health", (req, res) => {
   res.json({
     status: "healthy",
     service: "OmniRemote AI"
-  });
-});
-
-app.post("/ai", (req, res) => {
-  const { command } = req.body;
-
-  res.json({
-    received: command,
-    response: `OmniRemote AI processed: ${command}`
   });
 });
 
