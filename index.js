@@ -64,11 +64,28 @@ function updateDevice(name, status) {
 }
 
 
+// ACTION ENGINE
+function executeAction(device, action) {
+
+  console.log("ACTION SENT:", {
+    device,
+    action
+  });
+
+  return {
+    device,
+    action,
+    sent: true
+  };
+}
+
+
 app.get("/", (req,res)=>{
 res.send(`
 <h1>🤖 OmniRemote AI</h1>
 
 <input id="cmd" placeholder="Command">
+
 <button onclick="send()">Send</button>
 <button onclick="voice()">🎤 Voice</button>
 
@@ -99,6 +116,7 @@ new SpeechSynthesisUtterance(data.reply)
 
 }
 
+
 function voice(){
 
 let SpeechRecognition =
@@ -108,10 +126,12 @@ window.webkitSpeechRecognition;
 let r=new SpeechRecognition();
 
 r.onresult=function(e){
+
 document.getElementById("cmd").value =
 e.results[0][0].transcript;
 
 send();
+
 };
 
 r.start();
@@ -120,14 +140,6 @@ r.start();
 
 </script>
 `);
-});
-
-
-app.get("/health",(req,res)=>{
-res.json({
-status:"healthy",
-service:"OmniRemote AI"
-});
 });
 
 
@@ -161,56 +173,55 @@ reply:`${name} saved`
 }
 
 
-// FIND DEVICE
-
 const devices=load(deviceFile,{
 devices:[]
 });
+
 
 const device=devices.devices.find(d =>
 text.includes(d.name)
 );
 
 
-// DEVICE ON ACTION
+// TURN ON
 
 if(device && text.includes("turn on")){
 
 updateDevice(device.name,"ON");
 
+const action=executeAction(
+device.name,
+"ON"
+);
+
 return res.json({
 action:"DEVICE_ON",
 device:device.name,
 status:"ON",
+webhook:action,
 reply:`Turning on ${device.name}`
 });
 
 }
 
 
-// DEVICE OFF ACTION
+// TURN OFF
 
 if(device && text.includes("turn off")){
 
 updateDevice(device.name,"OFF");
 
+const action=executeAction(
+device.name,
+"OFF"
+);
+
 return res.json({
 action:"DEVICE_OFF",
 device:device.name,
 status:"OFF",
+webhook:action,
 reply:`Turning off ${device.name}`
-});
-
-}
-
-
-// STATUS
-
-if(text.includes("status")){
-
-return res.json({
-action:"SYSTEM_STATUS",
-reply:"OmniRemote AI is online"
 });
 
 }
