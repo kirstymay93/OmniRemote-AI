@@ -15,6 +15,15 @@ app.get("/health", (req, res) => {
   });
 });
 
+app.post("/ai", (req, res) => {
+  const { command } = req.body;
+
+  res.json({
+    received: command,
+    response: `OmniRemote AI processed: ${command}`
+  });
+});
+
 const PORT = process.env.PORT || 8080;
 
 app.listen(PORT, "0.0.0.0", () => {
