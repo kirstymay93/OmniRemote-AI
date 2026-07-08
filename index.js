@@ -4,108 +4,112 @@ const fs = require("fs");
 const app = express();
 app.use(express.json());
 
-const memoryFile = "./memory.json";
-const deviceFile = "./devices.json";
-
 const WEBHOOK_URL =
 "https://webhook.site/080146d1-5545-49cf-9347-4a42378f9774";
 
+const memoryFile = "./memory.json";
+const deviceFile = "./devices.json";
 
-function load(file, empty) {
+
+function readFile(file, fallback) {
   if (!fs.existsSync(file)) {
-    fs.writeFileSync(file, JSON.stringify(empty, null, 2));
+    fs.writeFileSync(file, JSON.stringify(fallback, null, 2));
   }
+
   return JSON.parse(fs.readFileSync(file, "utf8"));
 }
 
 
-function save(file, data) {
+function writeFile(file, data) {
   fs.writeFileSync(file, JSON.stringify(data, null, 2));
 }
 
 
-function remember(command) {
-
-  const memory = load(memoryFile,{
-    users:[],
-    commands:[]
+function saveCommand(command) {
+  const memory = readFile(memoryFile, {
+    users: [],
+    commands: []
   });
 
   memory.commands.push({
     command,
-    time:new Date().toISOString()
+    time: new Date().toISOString()
   });
 
-  save(memoryFile,memory);
+  writeFile(memoryFile, memory);
 }
 
 
-function addDevice(name,type){
+function addDevice(name, type) {
 
-  const data = load(deviceFile,{
-    devices:[]
+  const data = readFile(deviceFile, {
+    devices: []
   });
 
-  if(!data.devices.find(d=>d.name===name)){
+  if (!data.devices.find(d => d.name === name)) {
 
     data.devices.push({
+      id: Date.now(),
       name,
       type,
-      status:"OFF",
-      added:new Date().toISOString()
+      status: "OFF"
     });
 
   }
 
-  save(deviceFile,data);
+  writeFile(deviceFile, data);
 }
 
 
-function updateDevice(name,status){
+function setStatus(name, status) {
 
-  const data = load(deviceFile,{
-    devices:[]
+  const data = readFile(deviceFile, {
+    devices: []
   });
 
-  const device =
-  data.devices.find(d=>d.name===name);
+  const device = data.devices.find(
+    d => d.name === name
+  );
 
-  if(device){
-    device.status=status;
+  if (device) {
+    device.status = status;
   }
 
-  save(deviceFile,data);
+  writeFile(deviceFile, data);
 }
 
 
-async function sendAction(device,action){
+async function sendWebhook(device, action) {
 
-  const payload={
+  const payload = {
     device,
     action,
-    time:new Date().toISOString()
+    time: new Date().toISOString()
   };
 
-  try{
 
-    await fetch(WEBHOOK_URL,{
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json"
+  try {
+
+    await fetch(WEBHOOK_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
       },
-      body:JSON.stringify(payload)
+      body: JSON.stringify(payload)
     });
 
+
     return {
-      sent:true,
+      sent: true,
       payload
     };
 
-  }catch(error){
+
+  } catch (error) {
 
     return {
-      sent:false,
-      error:error.message
+      sent: false,
+      error: error.message
     };
 
   }
@@ -113,119 +117,53 @@ async function sendAction(device,action){
 
 
 
-app.get("/",(req,res)=>{
+app.get("/", (req,res)=>{
 
-res.send(`
-<h1>🤖 OmniRemote AI</h1>
-
-<input id="cmd" placeholder="Command">
-
-<button onclick="send()">Send</button>
-
-<button onclick="voice()">🎤 Voice</button>
-
-<pre id="out"></pre>
-
-<script>
-
-async function send(){
-
-let message=document.getElementById("cmd").value;
-
-let r=await fetch("/ai/chat",{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({message})
-});
-
-let data=await r.json();
-
-document.getElementById("out").textContent =
-JSON.stringify(data,null,2);
-
-speechSynthesis.speak(
-new SpeechSynthesisUtterance(data.reply)
-);
-
-}
-
-
-function voice(){
-
-let SpeechRecognition =
-window.SpeechRecognition ||
-window.webkitSpeechRecognition;
-
-let r=new SpeechRecognition();
-
-r.lang="en-US";
-
-r.onresult=function(e){
-
-document.getElementById("cmd").value =
-e.results[0][0].transcript;
-
-send();
-
-};
-
-r.start();
-
-}
-
-</script>
-`);
+res.send("OmniRemote AI running");
 
 });
 
 
 
-app.get("/health",(req,res)=>{
-
-res.json({
-status:"healthy",
-service:"OmniRemote AI"
-});
-
-});
+app.post("/ai/chat", async (req,res)=>{
 
 
+const message =
+req.body.message || "";
 
-app.post("/ai/chat",async(req,res)=>{
+const text =
+message.toLowerCase();
 
-const message=req.body.message || "";
 
-const text=message.toLowerCase();
-
-remember(message);
+saveCommand(message);
 
 
 
-if(text.startsWith("add ")){
+if(text.startsWith("add ")) {
 
-const name=text.replace("add ","");
+const device =
+text.replace("add ","");
+
 
 let type="device";
 
-if(name.includes("light"))
+if(device.includes("light"))
 type="light";
 
-if(name.includes("tv"))
+if(device.includes("tv"))
 type="tv";
 
 
-addDevice(name,type);
+addDevice(device,type);
 
 
 return res.json({
 
 action:"DEVICE_ADDED",
 
-device:name,
+device,
 
-reply:`${name} saved`
+reply:`${device} saved`
 
 });
 
@@ -233,26 +171,126 @@ reply:`${name} saved`
 
 
 
-const devices=load(deviceFile,{
-devices:[]
-});
 
 
-const device=devices.devices.find(d =>
+let devices =
+readFile(deviceFile,{devices:[]});
+
+
+let found =
+devices.devices.find(d =>
 text.includes(d.name)
 );
 
 
 
-if(device && text.includes("turn on")){
+
+// TV
+
+if(text.includes("tv")) {
+
+let action =
+text.includes("turn on")
+? "TV_ON"
+: "TV_OFF";
 
 
-updateDevice(device.name,"ON");
+let hook =
+await sendWebhook(
+"tv",
+action
+);
 
 
-const webhook =
-await sendAction(
-device.name,
+return res.json({
+
+action,
+
+webhook:hook,
+
+reply:
+action === "TV_ON"
+? "Turning on TV"
+: "Turning off TV"
+
+});
+
+}
+
+
+
+
+// PHONE
+
+if(text.includes("phone") ||
+text.includes("alert")) {
+
+
+let hook =
+await sendWebhook(
+"phone",
+"NOTIFICATION"
+);
+
+
+return res.json({
+
+action:"PHONE_ALERT",
+
+webhook:hook,
+
+reply:"Phone alert sent"
+
+});
+
+}
+
+
+
+
+
+// HOME ASSISTANT
+
+if(text.includes("home assistant")) {
+
+
+let hook =
+await sendWebhook(
+"home assistant",
+message
+);
+
+
+return res.json({
+
+action:"HOME_ASSISTANT",
+
+webhook:hook,
+
+reply:"Home Assistant command sent"
+
+});
+
+}
+
+
+
+
+
+// DEVICES
+
+if(found && text.includes("turn on")) {
+
+
+setStatus(
+found.name,
+"ON"
+);
+
+
+let hook =
+await sendWebhook(
+found.name,
 "ON"
 );
 
@@ -261,13 +299,13 @@ return res.json({
 
 action:"DEVICE_ON",
 
-device:device.name,
+device:found.name,
 
 status:"ON",
 
-webhook,
+webhook:hook,
 
-reply:`Turning on ${device.name}`
+reply:`Turning on ${found.name}`
 
 });
 
@@ -275,15 +313,20 @@ reply:`Turning on ${device.name}`
 
 
 
-if(device && text.includes("turn off")){
 
 
-updateDevice(device.name,"OFF");
+if(found && text.includes("turn off")) {
 
 
-const webhook =
-await sendAction(
-device.name,
+setStatus(
+found.name,
+"OFF"
+);
+
+
+let hook =
+await sendWebhook(
+found.name,
 "OFF"
 );
 
@@ -292,13 +335,13 @@ return res.json({
 
 action:"DEVICE_OFF",
 
-device:device.name,
+device:found.name,
 
 status:"OFF",
 
-webhook,
+webhook:hook,
 
-reply:`Turning off ${device.name}`
+reply:`Turning off ${found.name}`
 
 });
 
@@ -306,7 +349,9 @@ reply:`Turning off ${device.name}`
 
 
 
-return res.json({
+
+
+res.json({
 
 action:"CHAT",
 
@@ -319,26 +364,32 @@ reply:`I heard: ${message}`
 
 
 
+
 app.get("/devices",(req,res)=>{
 
-res.json(load(deviceFile,{
-devices:[]
-}));
+res.json(
+readFile(deviceFile,{devices:[]})
+);
 
 });
+
 
 
 app.get("/memory",(req,res)=>{
 
-res.json(load(memoryFile,{
+res.json(
+readFile(memoryFile,{
 users:[],
 commands:[]
-}));
+})
+);
 
 });
 
 
-const PORT=process.env.PORT || 10000;
+
+const PORT =
+process.env.PORT || 10000;
 
 
 app.listen(PORT,"0.0.0.0",()=>{
