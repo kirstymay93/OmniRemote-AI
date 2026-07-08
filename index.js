@@ -11,6 +11,7 @@ function load(file, empty) {
   if (!fs.existsSync(file)) {
     fs.writeFileSync(file, JSON.stringify(empty, null, 2));
   }
+
   return JSON.parse(fs.readFileSync(file, "utf8"));
 }
 
@@ -18,8 +19,11 @@ function save(file, data) {
   fs.writeFileSync(file, JSON.stringify(data, null, 2));
 }
 
-function saveCommand(command) {
-  const memory = load(memoryFile, { users: [], commands: [] });
+function rememberCommand(command) {
+  const memory = load(memoryFile, {
+    users: [],
+    commands: []
+  });
 
   memory.commands.push({
     command,
@@ -29,117 +33,156 @@ function saveCommand(command) {
   save(memoryFile, memory);
 }
 
-function saveDevice(name, type) {
-  const devices = load(deviceFile, { devices: [] });
-
-  devices.devices.push({
-    name,
-    type,
-    added: new Date().toISOString()
+function addDevice(name, type) {
+  const data = load(deviceFile, {
+    devices: []
   });
 
-  save(deviceFile, devices);
+  if (!data.devices.find(d => d.name === name)) {
+    data.devices.push({
+      name,
+      type,
+      added: new Date().toISOString()
+    });
+  }
+
+  save(deviceFile, data);
 }
 
-app.get("/", (req, res) => {
+app.get("/", (req,res)=>{
   res.send(`
-    <h1>🤖 OmniRemote AI</h1>
-    <input id="cmd" placeholder="Type command">
-    <button onclick="send()">Send</button>
-    <pre id="result"></pre>
+  <h1>🤖 OmniRemote AI</h1>
 
-    <script>
-      async function send() {
-        const message = document.getElementById("cmd").value;
+  <input id="cmd" placeholder="Type command">
+  <button onclick="send()">Send</button>
 
-        const response = await fetch("/ai/chat", {
-          method:"POST",
-          headers:{
-            "Content-Type":"application/json"
-          },
-          body:JSON.stringify({message})
-        });
+  <pre id="output"></pre>
 
-        document.getElementById("result").textContent =
-          JSON.stringify(await response.json(), null, 2);
-      }
-    </script>
+  <script>
+  async function send(){
+    let message=document.getElementById("cmd").value;
+
+    let r=await fetch("/ai/chat",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({message})
+    });
+
+    document.getElementById("output").innerHTML =
+      JSON.stringify(await r.json(),null,2);
+  }
+  </script>
   `);
 });
 
-app.get("/health", (req,res)=>{
+
+app.get("/health",(req,res)=>{
   res.json({
     status:"healthy",
     service:"OmniRemote AI"
   });
 });
 
+
 app.post("/ai/chat",(req,res)=>{
-  const message = req.body.message || "";
-  const text = message.toLowerCase();
 
-  saveCommand(message);
+  const message=req.body.message || "";
+  const text=message.toLowerCase();
 
+  rememberCommand(message);
+
+  // Add device
   if(text.startsWith("add ")){
-    const device = text.replace("add ","");
+
+    const name=text.replace("add ","");
 
     let type="device";
-    if(device.includes("light")) type="light";
-    if(device.includes("tv")) type="tv";
-    if(device.includes("music")) type="music";
 
-    saveDevice(device,type);
+    if(name.includes("light")) type="light";
+    if(name.includes("tv")) type="tv";
+    if(name.includes("music")) type="music";
+
+    addDevice(name,type);
 
     return res.json({
       action:"DEVICE_ADDED",
-      reply:`${device} saved`
+      device:name,
+      reply:`${name} saved`
     });
   }
 
-  if(text.includes("light") && text.includes("on")){
+
+  const devices=load(deviceFile,{
+    devices:[]
+  });
+
+
+  const device=devices.devices.find(d =>
+    text.includes(d.name)
+  );
+
+
+  if(device && text.includes("turn on")){
     return res.json({
-      action:"LIGHTS_ON",
-      reply:"Lights turned on"
+      action:"DEVICE_ON",
+      device:device.name,
+      reply:`Turning on ${device.name}`
     });
   }
 
-  if(text.includes("light") && text.includes("off")){
+
+  if(device && text.includes("turn off")){
     return res.json({
-      action:"LIGHTS_OFF",
-      reply:"Lights turned off"
+      action:"DEVICE_OFF",
+      device:device.name,
+      reply:`Turning off ${device.name}`
     });
   }
 
-  if(text.includes("tv")){
+
+  if(text.includes("hello") || text.includes("hi")){
     return res.json({
-      action:"TV_CONTROL",
-      reply:"TV command detected"
+      action:"CHAT",
+      reply:"Hello, I am OmniRemote AI"
     });
   }
 
-  if(text.includes("music")){
+
+  if(text.includes("status")){
     return res.json({
-      action:"MUSIC",
-      reply:"Music command detected"
+      action:"STATUS",
+      reply:"All systems online"
     });
   }
+
 
   return res.json({
-    action:"CHAT",
-    reply:`OmniRemote AI received: ${message}`
+    action:"UNKNOWN",
+    reply:`I received: ${message}`
   });
+
 });
+
 
 app.get("/memory",(req,res)=>{
-  res.json(load(memoryFile,{users:[],commands:[]}));
+  res.json(load(memoryFile,{
+    users:[],
+    commands:[]
+  }));
 });
+
 
 app.get("/devices",(req,res)=>{
-  res.json(load(deviceFile,{devices:[]}));
+  res.json(load(deviceFile,{
+    devices:[]
+  }));
 });
 
-const PORT = process.env.PORT || 10000;
+
+const PORT=process.env.PORT || 10000;
 
 app.listen(PORT,"0.0.0.0",()=>{
-  console.log(`OmniRemote AI running on port ${PORT}`);
+ console.log(`OmniRemote AI running on port ${PORT}`);
 });
