@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { remember, getMemory } = require("../services/memoryService");
+const { processCommand } = require("../services/commandService");
 
 router.post("/chat", (req, res) => {
   const { message } = req.body;
@@ -11,31 +11,11 @@ router.post("/chat", (req, res) => {
     });
   }
 
-  const text = message.toLowerCase();
+  const command = processCommand(message);
 
-  // Save memory
-  if (text.startsWith("remember")) {
-    remember({
-      text: message.replace("remember", "").trim(),
-      date: new Date()
-    });
-
-    return res.json({
-      reply: "I will remember that."
-    });
-  }
-
-  // Recall memory
-  if (text.includes("what do you remember") || text.includes("memory")) {
-    return res.json({
-      reply: "Here is what I remember:",
-      memory: getMemory()
-    });
-  }
-
-  // Normal chat
   res.json({
-    reply: `OmniRemote AI received: ${message}`
+    reply: command.message,
+    action: command.action
   });
 });
 
