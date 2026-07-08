@@ -1,30 +1,38 @@
-const fs = require("fs");
+const { readFile, writeFile } = require("../utils/fileUtils");
 
-const file = "./memory.json";
+const memoryFile = "./memory.json";
 
-function readMemory() {
-  return JSON.parse(fs.readFileSync(file, "utf8"));
-}
+function saveCommand(command) {
+  const memory = readFile(memoryFile, {
+    users: [],
+    commands: []
+  });
 
-function saveMemory(data) {
-  fs.writeFileSync(file, JSON.stringify(data, null, 2));
-}
+  memory.commands.push({
+    command,
+    time: new Date().toISOString()
+  });
 
-function remember(item) {
-  const memory = readMemory();
-
-  memory.users.push(item);
-
-  saveMemory(memory);
-
-  return "Memory saved";
+  writeFile(memoryFile, memory);
 }
 
 function getMemory() {
-  return readMemory();
+  return readFile(memoryFile, {
+    users: [],
+    commands: []
+  });
+}
+
+// Retaining existing functionality, adapting to fileUtils
+function remember(item) {
+  const memory = getMemory(); // Use getMemory to read
+  memory.users.push(item);
+  writeFile(memoryFile, memory);
+  return "Memory saved";
 }
 
 module.exports = {
-  remember,
-  getMemory
+  saveCommand,
+  getMemory,
+  remember
 };
