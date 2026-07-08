@@ -1,17 +1,12 @@
 {
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "name": "Launch OmniRemote AI",
-      "type": "node",
-      "request": "launch",
-      "program": "${workspaceFolder}/index.js",
-      "cwd": "${workspaceFolder}",
-      "skipFiles": [
-        "<node_internals>/**"
-      ],
-      "console": "integratedTerminal",
-      "restart": true
-    }
-  ]
+  "name": "omniremote-ai",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node index.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  }
 }
