@@ -73,3 +73,20 @@ const PORT = process.env.PORT || 10000;
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`OmniRemote AI running on port ${PORT}`);
 });
+
+const fs = require("fs");
+
+function saveDevice(name, type) {
+  let data = JSON.parse(fs.readFileSync("devices.json"));
+
+  data.devices.push({
+    name: name,
+    type: type,
+    added: new Date().toISOString()
+  });
+
+  fs.writeFileSync(
+    "devices.json",
+    JSON.stringify(data, null, 2)
+  );
+}
