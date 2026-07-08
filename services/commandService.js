@@ -1,17 +1,38 @@
 function processCommand(command) {
   const text = command.toLowerCase();
 
-  if (text.includes("turn on")) {
+  if (text.includes("light") && text.includes("on")) {
     return {
-      action: "POWER_ON",
-      message: "Power on command detected"
+      action: "LIGHTS_ON",
+      message: "Lights turned on"
     };
   }
 
-  if (text.includes("turn off")) {
+  if (text.includes("light") && text.includes("off")) {
     return {
-      action: "POWER_OFF",
-      message: "Power off command detected"
+      action: "LIGHTS_OFF",
+      message: "Lights turned off"
+    };
+  }
+
+  if (text.includes("tv") && text.includes("on")) {
+    return {
+      action: "TV_ON",
+      message: "TV turned on"
+    };
+  }
+
+  if (text.includes("tv") && text.includes("off")) {
+    return {
+      action: "TV_OFF",
+      message: "TV turned off"
+    };
+  }
+
+  if (text.includes("music") || text.includes("play")) {
+    return {
+      action: "MUSIC_PLAY",
+      message: "Playing music"
     };
   }
 
@@ -19,27 +40,6 @@ function processCommand(command) {
     return {
       action: "RESTART",
       message: "Restart command detected"
-    };
-  }
-
-  if (text.includes("lights")) {
-    return {
-      action: "LIGHTS",
-      message: "Lights command detected"
-    };
-  }
-
-  if (text.includes("tv")) {
-    return {
-      action: "TV",
-      message: "TV command detected"
-    };
-  }
-
-  if (text.includes("music")) {
-    return {
-      action: "MUSIC",
-      message: "Music command detected"
     };
   }
 
