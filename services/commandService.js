@@ -22,6 +22,27 @@ function processCommand(command) {
     };
   }
 
+  if (text.includes("lights")) {
+    return {
+      action: "LIGHTS",
+      message: "Lights command detected"
+    };
+  }
+
+  if (text.includes("tv")) {
+    return {
+      action: "TV",
+      message: "TV command detected"
+    };
+  }
+
+  if (text.includes("music")) {
+    return {
+      action: "MUSIC",
+      message: "Music command detected"
+    };
+  }
+
   if (text.includes("hello") || text.includes("hi")) {
     return {
       action: "CHAT",
