@@ -1,3 +1,4 @@
+mkdir -p .github/workflows && cat > .github/workflows/deploy.yml <<'EOF'
 name: Deploy to Cloud Run
 
 on:
@@ -20,7 +21,7 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: projects/802310203095/locations/global/workloadIdentityPools/github-provider/providers/github-actions-provider
+          workload_identity_provider: projects/802310203095/locations/global/workloadIdentityPools/github-provider/providers/github-provider
           service_account: github-actions-sa@omniremote-501422.iam.gserviceaccount.com
 
       - name: Install Google Cloud SDK
@@ -44,3 +45,8 @@ jobs:
           service: omniremote-backend
           region: us-central1
           image: us-central1-docker.pkg.dev/omniremote-501422/omniremote-repo/omniremote-backend:${{ github.sha }}
+EOF
+
+git add .github/workflows/deploy.yml
+git commit -m "Fix Cloud Run GitHub Actions authentication"
+git push origin main
