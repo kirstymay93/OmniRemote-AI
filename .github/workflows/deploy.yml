@@ -1,0 +1,46 @@
+name: Deploy to Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/802310203095/locations/global/workloadIdentityPools/github-pool/providers/github-provider
+          service_account: github-actions-sa@omniremote-501422.iam.gserviceaccount.com
+
+      - name: Install Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker
+        run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+
+      - name: Build Docker image
+        run: |
+          docker build -t us-central1-docker.pkg.dev/omniremote-501422/omniremote-repo/omniremote-backend:${{ github.sha }} .
+
+      - name: Push Docker image
+        run: |
+          docker push us-central1-docker.pkg.dev/omniremote-501422/omniremote-repo/omniremote-backend:${{ github.sha }}
+
+      - name: Deploy to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          project_id: omniremote-501422
+          service: omniremote-backend
+          region: us-central1
+          image: us-central1-docker.pkg.dev/omniremote-501422/omniremote-repo/omniremote-backend:${{ github.sha }}
